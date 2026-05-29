@@ -64,8 +64,23 @@ Windows:
 py LogViewerApp.py
 ```
 
-Linux/macOS:
+Linux:
+- Tk/Tkinter may need to be installed separately.
+
+Arch / CachyOS:
 
 ```bash
-python3 LogViewerApp.py
+sudo pacman -S tk
+```
+
+Debian / Ubuntu:
+
+```bash
+sudo apt install python3-tk
+```
+
+Fedora:
+
+```bash
+sudo dnf install python3-tkinter
 ```
