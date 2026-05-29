@@ -256,7 +256,7 @@ class LogViewerApp:
         # Window
         self.window = tk.Tk()
         self.window.title("Log Viewer")
-        self.window.geometry("1100x650")
+        self.window.geometry("1200x650")
 
         self.loaded_text = ""
         self.applied_filter_text = ""
