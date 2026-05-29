@@ -19,6 +19,8 @@ DEFAULT_HIGHLIGHT_RULES = [
 ]
 FILTER_SEPARATOR = "---------------- recent filters ----------------"
 CONTEXT_SEPARATOR = "----------------------------------------"
+TOOL_BUTTON_WIDTH = 8
+WIDE_BUTTON_WIDTH = 12
 
 LIGHT_THEME = {
     "window_bg": "#cfd3d8",
@@ -256,7 +258,7 @@ class LogViewerApp:
         # Window
         self.window = tk.Tk()
         self.window.title("Log Viewer")
-        self.window.geometry("1200x650")
+        self.window.geometry("1000x650")
 
         self.loaded_text = ""
         self.applied_filter_text = ""
@@ -286,12 +288,28 @@ class LogViewerApp:
         self.row_offset_var = tk.StringVar(value=str(load_row_offset()))
 
         # Buttons
-        self.open_button = tk.Button(self.window, text="Open", command=self.open_file)
-        self.reload_button = tk.Button(self.window, text="Reload", command=self.reload_file)
-        self.clear_filter_button = tk.Button(self.window, text="Clear", command=self.clear_filter)
-        self.refresh_button = tk.Button(self.window, text="Apply", command=self.apply_filter)
-        self.copy_button = tk.Button(self.window, text="Copy Result", command=self.copy_result)
+        self.open_button = tk.Button(self.window, text="Open", width=TOOL_BUTTON_WIDTH, command=self.open_file)
+        self.reload_button = tk.Button(self.window, text="Reload", width=TOOL_BUTTON_WIDTH, command=self.reload_file)
+        self.clear_filter_button = tk.Button(
+            self.window,
+            text="Clear",
+            width=TOOL_BUTTON_WIDTH,
+            command=self.clear_filter,
+        )
+        self.refresh_button = tk.Button(
+            self.window,
+            text="Apply",
+            width=TOOL_BUTTON_WIDTH,
+            command=self.apply_filter,
+        )
+        self.copy_button = tk.Button(
+            self.window,
+            text="Copy Result",
+            width=TOOL_BUTTON_WIDTH,
+            command=self.copy_result,
+        )
         self.search_button = None
+        self.next_search_button = None
         self.row_offset_spinbox = None
 
         # Status
@@ -356,20 +374,38 @@ class LogViewerApp:
         self.window.columnconfigure(2, weight=0)
         self.window.columnconfigure(3, weight=0)
         self.window.columnconfigure(4, weight=0)
-        self.window.rowconfigure(4, weight=1)
+        self.window.rowconfigure(5, weight=1)
 
-        tk.Label(self.window, text="File:").grid(row=0, column=0, sticky="w", padx=8, pady=4)
-        self.file_entry.grid(row=0, column=1, sticky="ew", padx=8, pady=4)
-        self.open_button.grid(row=0, column=2, sticky="w", padx=4, pady=4)
-        self.reload_button.grid(row=0, column=3, sticky="ew", padx=8, pady=4)
+        tk.Label(self.window, text="File:").grid(row=0, column=0, sticky="w", padx=8, pady=3)
+        self.file_entry.grid(row=0, column=1, sticky="ew", padx=8, pady=3)
+        self.open_button.grid(row=0, column=2, sticky="w", padx=4, pady=3)
+        self.reload_button.grid(row=0, column=3, sticky="w", padx=8, pady=3)
 
-        tk.Label(self.window, text="Filter:").grid(row=1, column=0, sticky="w", padx=8, pady=4)
-        self.filter_entry.grid(row=1, column=1, sticky="ew", padx=8, pady=4)
-        self.clear_filter_button.grid(row=1, column=2, sticky="w", padx=4, pady=4)
-        self.refresh_button.grid(row=1, column=3, sticky="ew", padx=8, pady=4)
+        tk.Label(self.window, text="Filter:").grid(row=1, column=0, sticky="w", padx=8, pady=3)
+        self.filter_entry.grid(row=1, column=1, sticky="ew", padx=8, pady=3)
+        self.clear_filter_button.grid(row=1, column=2, sticky="w", padx=4, pady=3)
+        self.refresh_button.grid(row=1, column=3, sticky="w", padx=8, pady=3)
+
+        tk.Label(self.window, text="Search:").grid(row=2, column=0, sticky="w", padx=8, pady=3)
+        self.search_entry = tk.Entry(self.window)
+        self.search_entry.grid(row=2, column=1, sticky="ew", padx=8, pady=3)
+        self.search_button = tk.Button(
+            self.window,
+            text="Find",
+            width=TOOL_BUTTON_WIDTH,
+            command=self.find_first,
+        )
+        self.search_button.grid(row=2, column=2, sticky="w", padx=4, pady=3)
+        self.next_search_button = tk.Button(
+            self.window,
+            text="Next",
+            width=TOOL_BUTTON_WIDTH,
+            command=self.find_next,
+        )
+        self.next_search_button.grid(row=2, column=3, sticky="w", padx=8, pady=3)
 
         controls_frame = tk.Frame(self.window)
-        controls_frame.grid(row=2, column=1, columnspan=2, sticky="w", padx=8, pady=2)
+        controls_frame.grid(row=3, column=1, columnspan=2, sticky="w", padx=8, pady=2)
         tk.Checkbutton(
             controls_frame,
             text="Case sensitive",
@@ -394,21 +430,16 @@ class LogViewerApp:
             variable=self.dark_mode_var,
             command=self.toggle_theme,
         ).pack(side="left", padx=(16, 0))
-        tk.Label(controls_frame, text="Search:").pack(side="left", padx=(18, 0))
-        self.search_entry = tk.Entry(controls_frame, width=18)
-        self.search_entry.pack(side="left", padx=(6, 4))
-        self.search_button = tk.Button(controls_frame, text="Find", width=8, command=self.find_next)
-        self.search_button.pack(side="left")
-        tk.Label(controls_frame, text="Span:").pack(side="left", padx=(14, 0))
+        tk.Label(controls_frame, text="Span:").pack(side="left", padx=(22, 0))
         self.create_row_offset_spinbox(controls_frame)
         self.row_offset_spinbox.pack(side="left", padx=(6, 0))
 
-        self.copy_button.grid(row=2, column=3, sticky="ew", padx=8, pady=4)
+        self.copy_button.grid(row=3, column=3, sticky="w", padx=8, pady=3)
 
-        self.regex_help.grid(row=0, column=4, rowspan=4, sticky="nw", padx=16, pady=4)
-        self.status_label.grid(row=3, column=0, columnspan=4, sticky="ew", padx=8, pady=4)
+        self.regex_help.grid(row=0, column=4, rowspan=5, sticky="nw", padx=16, pady=4)
+        self.status_label.grid(row=4, column=0, columnspan=4, sticky="ew", padx=8, pady=4)
 
-        self.text_frame.grid(row=4, column=0, columnspan=5, sticky="nsew", padx=8, pady=8)
+        self.text_frame.grid(row=5, column=0, columnspan=5, sticky="nsew", padx=8, pady=8)
         self.text_frame.columnconfigure(0, weight=1)
         self.text_frame.rowconfigure(0, weight=1)
         self.text_box.grid(row=0, column=0, sticky="nsew")
@@ -519,6 +550,11 @@ class LogViewerApp:
         else:
             self.horizontal_scrollbar.grid()
 
+    def find_first(self):
+        self.last_search_text = ""
+        self.last_search_end = "1.0"
+        self.find_next()
+
     def find_next(self):
         search_text = self.search_entry.get().strip()
         if not search_text:
@@ -587,7 +623,7 @@ class LogViewerApp:
                     activeforeground=theme["button_fg"],
                     relief="flat",
                     padx=8,
-                    pady=3,
+                    pady=1,
                 )
             elif isinstance(widget, tk.Entry):
                 self.configure_widget(
